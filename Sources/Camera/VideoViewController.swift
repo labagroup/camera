@@ -54,7 +54,7 @@ open class VideoViewController: UIViewController, PreviewViewDelegate, VideoCame
     
     private func setupTimerLabel() {
         self.timerLabel = UILabel()
-        self.timerLabel.font = UIFont.systemFont(ofSize: 24, weight: .semibold)
+        self.timerLabel.font = UIFont.systemFont(ofSize: 28, weight: .semibold)
         self.timerLabel.textColor = .white
         self.timerLabel.isHidden = true
         self.timerLabel.textAlignment = .center

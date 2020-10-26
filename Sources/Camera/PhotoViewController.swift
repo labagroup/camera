@@ -158,7 +158,6 @@ open class PhotoViewController: UIViewController, PreviewViewDelegate {
     }
     
     @objc private func onSwitch() {
-        // TODO:
         self.camera.switchDevice()
     }
     
