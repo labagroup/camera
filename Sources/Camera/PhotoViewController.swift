@@ -69,7 +69,7 @@ open class PhotoViewController: UIViewController, PreviewViewDelegate {
             maker.width.height.equalTo(44)
         }
         
-        let captureConfig = UIImage.SymbolConfiguration(pointSize: 44, weight: .regular, scale: .large)
+        let captureConfig = UIImage.SymbolConfiguration(pointSize: 60, weight: .regular, scale: .large)
         captureButton = UIButton()
         captureButton.tintColor = .white
         captureButton.setImage(UIImage(systemName: "circle.dashed.inset.fill", withConfiguration: captureConfig), for: .normal)

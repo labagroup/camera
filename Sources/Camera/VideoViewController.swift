@@ -29,7 +29,7 @@ open class VideoViewController: UIViewController, PreviewViewDelegate, VideoCame
     open override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .black
-        self.recordButtonImageConfig = UIImage.SymbolConfiguration(pointSize: 44, weight: .regular, scale: .large)
+        self.recordButtonImageConfig = UIImage.SymbolConfiguration(pointSize: 60, weight: .regular, scale: .large)
         setupToolbar()
         setupTimerLabel()
         configure()
@@ -56,8 +56,6 @@ open class VideoViewController: UIViewController, PreviewViewDelegate, VideoCame
         self.timerLabel = UILabel()
         self.timerLabel.font = UIFont.systemFont(ofSize: 24, weight: .semibold)
         self.timerLabel.textColor = .white
-        self.timerLabel.shadowColor = .lightGray
-        self.timerLabel.shadowOffset = CGSize(width: 1, height: 1)
         self.timerLabel.isHidden = true
         self.timerLabel.textAlignment = .center
         self.view.addSubview(self.timerLabel)
@@ -65,7 +63,7 @@ open class VideoViewController: UIViewController, PreviewViewDelegate, VideoCame
             maker.height.equalTo(40)
             maker.width.equalToSuperview()
             maker.centerX.equalToSuperview()
-            maker.top.equalTo(30)
+            maker.top.equalTo(40)
         }
     }
     
