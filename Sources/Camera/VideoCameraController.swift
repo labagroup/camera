@@ -10,23 +10,28 @@ import AVKit
 import SnapKit
 import JGProgressHUD
 
-public protocol PhotoViewControllerDelegate: NSObjectProtocol {
-    func didCapturePhoto(_ data: Data)
+public protocol VideoCameraControllerDelegate: NSObjectProtocol {
+    func didCaptureVideo(_ controller: VideoCameraController, url: URL)
 }
 
-open class PhotoViewController: UIViewController, PreviewViewDelegate {
+open class VideoCameraController: UIViewController, PreviewViewDelegate, VideoCameraDelegate {
     private var preview: PreviewView!
     private var toolbar: UIView!
     private var closeButton: UIButton!
-    private var captureButton: UIButton!
+    private var recordButton: UIButton!
     private var switchButton: UIButton!
-    private var camera: PhotoCamera!
-    public weak var delegate: PhotoViewControllerDelegate?
+    private var camera: VideoCamera!
+    private var timerLabel: UILabel!
+    private weak var timer: Timer?
+    public weak var delegate: VideoCameraControllerDelegate?
+    private var recordButtonImageConfig: UIImage.SymbolConfiguration!
     
     open override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .black
+        self.recordButtonImageConfig = UIImage.SymbolConfiguration(pointSize: 80, weight: .regular, scale: .large)
         setupToolbar()
+        setupTimerLabel()
         configure()
     }
     
@@ -44,6 +49,22 @@ open class PhotoViewController: UIViewController, PreviewViewDelegate {
     open override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         camera?.stop()
+        timer?.invalidate()
+    }
+    
+    private func setupTimerLabel() {
+        self.timerLabel = UILabel()
+        self.timerLabel.font = UIFont.systemFont(ofSize: 28, weight: .semibold)
+        self.timerLabel.textColor = .lightText
+        self.timerLabel.isHidden = true
+        self.timerLabel.textAlignment = .center
+        self.view.addSubview(self.timerLabel)
+        self.timerLabel.snp.makeConstraints { (maker) in
+            maker.height.equalTo(40)
+            maker.width.equalToSuperview()
+            maker.centerX.equalToSuperview()
+            maker.top.equalTo(40)
+        }
     }
     
     private func setupToolbar() {
@@ -51,7 +72,7 @@ open class PhotoViewController: UIViewController, PreviewViewDelegate {
         toolbar.backgroundColor = .black
         self.view.addSubview(toolbar)
         toolbar.snp.makeConstraints { (maker) in
-            maker.height.equalTo(60)
+            maker.height.equalTo(88)
             maker.left.right.equalToSuperview()
             maker.bottom.equalTo(self.view.safeAreaLayoutGuide.snp.bottom)
         }
@@ -59,7 +80,7 @@ open class PhotoViewController: UIViewController, PreviewViewDelegate {
         let config = UIImage.SymbolConfiguration(pointSize: 28, weight: .regular, scale: .medium)
         
         closeButton = UIButton()
-        closeButton.tintColor = .white
+        closeButton.tintColor = .lightGray
         closeButton.setImage(UIImage(systemName: "chevron.down.circle", withConfiguration: config), for: .normal)
         closeButton.addTarget(self, action: #selector(onClose), for: .touchUpInside)
         toolbar.addSubview(closeButton)
@@ -69,20 +90,19 @@ open class PhotoViewController: UIViewController, PreviewViewDelegate {
             maker.width.height.equalTo(44)
         }
         
-        let captureConfig = UIImage.SymbolConfiguration(pointSize: 60, weight: .regular, scale: .large)
-        captureButton = UIButton()
-        captureButton.tintColor = .white
-        captureButton.setImage(UIImage(systemName: "circle.dashed.inset.fill", withConfiguration: captureConfig), for: .normal)
-        captureButton.addTarget(self, action: #selector(onCapture), for: .touchUpInside)
-        toolbar.addSubview(captureButton)
-        captureButton.snp.makeConstraints { (maker) in
+        recordButton = UIButton()
+        recordButton.tintColor = .green
+        recordButton.setImage(UIImage(systemName: "circle.dashed.inset.fill", withConfiguration: self.recordButtonImageConfig), for: .normal)
+        recordButton.addTarget(self, action: #selector(onRecord), for: .touchUpInside)
+        toolbar.addSubview(recordButton)
+        recordButton.snp.makeConstraints { (maker) in
             maker.center.equalToSuperview()
-            maker.width.height.equalTo(44)
+            maker.width.height.equalTo(72)
         }
         
         switchButton = UIButton()
         switchButton.setImage(UIImage(systemName: "arrow.triangle.2.circlepath.camera", withConfiguration: config), for: .normal)
-        switchButton.tintColor = .white
+        switchButton.tintColor = .lightGray
         switchButton.addTarget(self, action: #selector(onSwitch), for: .touchUpInside)
         toolbar.addSubview(switchButton)
         switchButton.snp.makeConstraints { (maker) in
@@ -113,12 +133,14 @@ open class PhotoViewController: UIViewController, PreviewViewDelegate {
                 hud.dismiss(afterDelay: 2)
                 return
             }
-            camera = PhotoCamera()
+            camera = VideoCamera()
+            camera.delegate = self
             preview.session = camera.session
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video, completionHandler: { granted in
                 if granted {
-                    self.camera = PhotoCamera()
+                    self.camera = VideoCamera()
+                    self.camera.delegate = self
                     self.preview.session = self.camera.session
                     return
                 }
@@ -141,24 +163,17 @@ open class PhotoViewController: UIViewController, PreviewViewDelegate {
         dismiss(animated: true, completion: nil)
     }
     
-    @objc private func onCapture() {
-        self.captureButton.isEnabled = false
-        self.camera.capture { (data, error) in
-            self.captureButton.isEnabled = true
-            if let err = error {
-                let hud = JGProgressHUD(style: .light)
-                hud.indicatorView = JGProgressHUDErrorIndicatorView()
-                hud.textLabel.text = err.localizedDescription
-                hud.show(in: self.view)
-                hud.dismiss(afterDelay: 2)
-                return
-            }
-            self.delegate?.didCapturePhoto(data!)
+    @objc private func onRecord() {
+        if self.camera.isRecording {
+            self.camera.stopRecording()
+        } else {
+            self.camera.startRecording(self.preview.videoPreviewLayer.connection?.videoOrientation ?? .portrait)
         }
+        self.recordButton.isEnabled = false
     }
     
     @objc private func onSwitch() {
-        self.camera.switchDevice()
+        self.camera?.switchDevice()
     }
     
     func previewDidTap(_ devicePoint: CGPoint, layerPoint: CGPoint) {
@@ -166,4 +181,42 @@ open class PhotoViewController: UIViewController, PreviewViewDelegate {
             self.preview.animateFocusAt(layerPoint)
         }
     }
+    
+    func didStartRecording() {
+        self.recordButton.setImage(UIImage(systemName: "stop.circle", withConfiguration: self.recordButtonImageConfig), for: .normal)
+        self.recordButton.isEnabled = true
+        var secs = 0
+        self.timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true, block: { [weak self] (t) in
+            secs += 1
+            let h = secs / 3600
+            let m = (secs % 3600) / 60
+            let s = secs % 60
+            self?.timerLabel.isHidden = false
+            self?.timerLabel.text = String(format: "%02d:%02d:%02d", h, m, s)
+        })
+    }
+    
+    func didFinishRecording(_ url: URL, err: Error?) {
+        self.timer?.invalidate()
+        self.timerLabel.isHidden = true
+        self.recordButton.setImage(UIImage(systemName: "circle.dashed.inset.fill", withConfiguration: self.recordButtonImageConfig), for: .normal)
+        self.recordButton.isEnabled = true
+        if err != nil {
+            let hud = JGProgressHUD(style: .light)
+            hud.indicatorView = JGProgressHUDErrorIndicatorView()
+            hud.textLabel.text = err!.localizedDescription
+            hud.show(in: self.view)
+            hud.dismiss(afterDelay: 2)
+            return
+        }
+        self.delegate?.didCaptureVideo(self, url: url)
+    }
+    
+    open override var shouldAutorotate: Bool {
+        if self.camera == nil {
+            return true
+        }
+        return !self.camera.isRecording
+    }
+    
 }

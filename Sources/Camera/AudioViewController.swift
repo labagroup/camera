@@ -17,7 +17,7 @@ open class AudioViewController: UIViewController {
         super.viewDidLoad()
         self.view.backgroundColor = .black
         
-        let config = UIImage.SymbolConfiguration(pointSize: 160, weight: .bold, scale: .large)
+        let config = UIImage.SymbolConfiguration(pointSize: 120, weight: .bold, scale: .large)
         self.recordButton = UIButton()
         self.recordButton.setImage(UIImage(systemName: "mic.circle.fill", withConfiguration: config), for: .normal)
         self.recordButton.tintColor = .green
@@ -25,11 +25,11 @@ open class AudioViewController: UIViewController {
         self.view.addSubview(self.recordButton)
         self.recordButton.snp.makeConstraints { (maker) in
             maker.center.equalToSuperview()
-            maker.width.height.equalTo(160)
+            maker.width.height.equalTo(120)
         }
         
         self.timerLabel = UILabel()
-        self.timerLabel.textColor = .white
+        self.timerLabel.textColor = .lightText
         self.timerLabel.text = "00:00:00"
         self.timerLabel.textAlignment = .center
         self.timerLabel.font = UIFont.systemFont(ofSize: 40, weight: .bold)
@@ -43,9 +43,9 @@ open class AudioViewController: UIViewController {
         }
         
         self.titleLabel = UILabel()
-        self.titleLabel.textColor = .white
+        self.titleLabel.textColor = .lightText
         self.titleLabel.text = "正在录音"
-        self.timerLabel.font = UIFont.systemFont(ofSize: 32, weight: .semibold)
+        self.titleLabel.font = UIFont.systemFont(ofSize: 32, weight: .semibold)
         self.titleLabel.textAlignment = .center
 //        self.titleLabel.isHidden = true
         self.view.addSubview(self.titleLabel)
@@ -55,13 +55,31 @@ open class AudioViewController: UIViewController {
             maker.centerX.equalToSuperview()
             maker.top.equalTo(self.recordButton.snp.bottom).offset(30)
         }
+        
+        
+        let smallConfig = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold, scale: .large)
+        let closeButton = UIButton()
+        closeButton.tintColor = .lightGray
+        closeButton.setImage(UIImage(systemName: "xmark.circle", withConfiguration: smallConfig), for: .normal)
+        closeButton.addTarget(self, action: #selector(onClose), for: .touchUpInside)
+        self.view.addSubview(closeButton)
+        closeButton.snp.makeConstraints { (maker) in
+            maker.right.equalToSuperview().offset(-16)
+            maker.top.equalToSuperview().offset(16)
+            maker.width.height.equalTo(44)
+        }
     }
+    
     
     open override var prefersStatusBarHidden: Bool {
         return true
     }
     
     @objc private func onRecord() {
+
+    }
+    
+    @objc private func onClose() {
         self.dismiss(animated: true, completion: nil)
     }
 }
