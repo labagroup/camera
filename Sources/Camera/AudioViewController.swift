@@ -44,7 +44,7 @@ open class AudioViewController: UIViewController {
         
         self.titleLabel = UILabel()
         self.titleLabel.textColor = .lightText
-        self.titleLabel.text = "正在录音"
+        self.titleLabel.text = Translate("AudioRecording")
         self.titleLabel.font = UIFont.systemFont(ofSize: 32, weight: .semibold)
         self.titleLabel.textAlignment = .center
 //        self.titleLabel.isHidden = true

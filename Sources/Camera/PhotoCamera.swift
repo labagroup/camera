@@ -170,3 +170,7 @@ open class PhotoCamera: NSObject, AVCapturePhotoCaptureDelegate {
         }
     }
 }
+
+func Translate(_ key: String) -> String {
+    return NSLocalizedString(key, comment: "")
+}

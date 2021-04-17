@@ -26,6 +26,10 @@ open class VideoCameraController: UIViewController, PreviewViewDelegate, VideoCa
     public weak var delegate: VideoCameraControllerDelegate?
     private var recordButtonImageConfig: UIImage.SymbolConfiguration!
     
+    deinit {
+        UIApplication.shared.isIdleTimerDisabled = false
+    }
+    
     open override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .black
@@ -33,6 +37,7 @@ open class VideoCameraController: UIViewController, PreviewViewDelegate, VideoCa
         setupToolbar()
         setupTimerLabel()
         configure()
+        UIApplication.shared.isIdleTimerDisabled = true
     }
     
     open override var prefersStatusBarHidden: Bool {
@@ -128,7 +133,7 @@ open class VideoCameraController: UIViewController, PreviewViewDelegate, VideoCa
             if getDefaultVideoDevice() == nil {
                 let hud = JGProgressHUD(style: .light)
                 hud.indicatorView = JGProgressHUDErrorIndicatorView()
-                hud.textLabel.text = "无法获取摄像头"
+                hud.textLabel.text = Translate("CameraUnavailable")
                 hud.show(in: self.view)
                 hud.dismiss(afterDelay: 2)
                 return
@@ -144,15 +149,15 @@ open class VideoCameraController: UIViewController, PreviewViewDelegate, VideoCa
                     self.preview.session = self.camera.session
                     return
                 }
-                let c = UIAlertController(title: "请允许使用摄像头", message: "", preferredStyle: .alert)
-                c.addAction(UIAlertAction(title: "取消", style: .cancel, handler: nil))
-                c.addAction(UIAlertAction(title: "设置", style: .`default`, handler: {_ in openSystemSettings()}))
+                let c = UIAlertController(title: Translate("CameraRequest"), message: "", preferredStyle: .alert)
+                c.addAction(UIAlertAction(title: Translate("Cancel"), style: .cancel, handler: nil))
+                c.addAction(UIAlertAction(title: Translate("Settings"), style: .`default`, handler: {_ in openSystemSettings()}))
                 self.present(c, animated: true, completion: nil)
             })
         default:
             let hud = JGProgressHUD(style: .light)
             hud.indicatorView = JGProgressHUDErrorIndicatorView()
-            hud.textLabel.text = "开启摄像头失败"
+            hud.textLabel.text = Translate("CameraOpenFailed")
             hud.show(in: self.view)
             hud.dismiss(afterDelay: 2)
         }
